@@ -1,0 +1,6 @@
+{
+  "name": "super-flip-cb-webos-tools",
+  "private": true,
+  "version": "0.0.1",
+  "devDependencies": { "@webos-tools/cli": "3.2.6" }
+}

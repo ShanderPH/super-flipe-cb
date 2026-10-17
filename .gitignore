@@ -1,0 +1,15 @@
+data/
+vendor/emulatorjs/
+vendor/emulatorjs-backup-*/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+node_modules/
+dist/
+artifacts/
+test-results/
+playwright-report/
+.env
+*.ipk

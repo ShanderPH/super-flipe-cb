@@ -1,0 +1,40 @@
+name: Quality
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: apps/tv-client/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.9'
+      - run: uv sync --project server --frozen
+      - run: uv run --project server ruff check server/app server/tests
+      - run: uv run --project server ruff format --check server/app server/tests
+      - run: uv run --directory server pytest -q
+      - run: uv run --project server python scripts/diagnose/export-openapi.py --check
+      - run: npm ci
+        working-directory: apps/tv-client
+      - run: uv run --project server python scripts/runtime/install-runtime.py
+      - run: npm run runtime:test
+        working-directory: apps/tv-client
+      - run: npm run contracts && git diff --exit-code -- src/services/schema.d.ts
+        working-directory: apps/tv-client
+      - run: npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
+        working-directory: apps/tv-client
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/tv-client
+      - run: npm run e2e
+        working-directory: apps/tv-client
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: desktop-test-evidence
+          path: apps/tv-client/test-results

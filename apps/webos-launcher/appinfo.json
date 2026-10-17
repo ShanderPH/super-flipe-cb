@@ -1,0 +1,15 @@
+{
+  "id": "com.superflipcb.app",
+  "version": "0.0.2",
+  "vendor": "Super Flip CB",
+  "type": "web",
+  "main": "index.html",
+  "title": "Super Flip CB",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#101321",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "cloudgame_active": true,
+  "requiredACG": []
+}

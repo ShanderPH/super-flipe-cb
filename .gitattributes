@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
+# Imported source preserves intentional Markdown hard line breaks.
+docs/planning.md whitespace=-blank-at-eol

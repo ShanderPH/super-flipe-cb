@@ -1,0 +1,26 @@
+@font-face {
+  font-family: Archivo;
+  src: url("/fonts/archivo-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: Pixelify;
+  src: url("/fonts/pixelify-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+:root {
+  --bg: #101321;
+  --surface: #1b2034;
+  --text: #f5f1e8;
+  --muted: #adb7cc;
+  --focus: #f9db6d;
+  --snes: #a889f7;
+  --line: #343b56;
+  --green: #63d4bd;
+  --font: Archivo, system-ui, sans-serif;
+  --display: Pixelify, monospace;
+}

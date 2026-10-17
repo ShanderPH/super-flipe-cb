@@ -1,0 +1,19 @@
+[project]
+name = "super-flip-cb-server"
+version = "0.0.1"
+requires-python = ">=3.13,<3.14"
+dependencies = ["fastapi==0.143.3", "uvicorn==0.42.0", "filelock==3.20.3"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "httpx>=0.28,<0.29", "ruff>=0.14,<1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

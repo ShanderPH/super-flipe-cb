@@ -1,0 +1,15 @@
+# Contrato do player
+
+Pai → iframe same-origin `/player/?gameId=snes-<hash>`: `{ type, requestId, gameId, payload }`. Receptor exige `event.origin === location.origin`, `event.source === parent`. Pai exige a origem e `iframe.contentWindow`. Tipos desconhecidos/IDs divergentes são ignorados.
+
+Comandos: `pause`, `resume`, `save`, `restore`, `export`, `import` (payload.bytes Uint8Array até 2 MiB), `exportPrevious`, `diagnostics`, `autosync` (payload.enabled boolean). Eventos: `ready`, `started`, `paused`, `resumed`, `saved`, `restored`, `exported`, `configured`, `progress`, `menu`, `error`. Respostas repetem requestId; eventos espontâneos usam `event`. O pai correlaciona ID e tipo, descarta respostas vencidas e libera ações de progresso só após pausa confirmada. Retomada fecha o menu só após `resumed`. `fatal` bloqueia continuidade. Save só é confirmado após PUT e ETag.
+
+Boot: catálogo → identidade `/api/runtime` → GET save (404 é slot novo, outros erros bloqueiam início) → bundle local → início por gesto → pausa breve, validação do tamanho e restauração SRAM → início confirmado. Não há HEAD redundante da ROM; o GET ainda verifica SHA-256 integral. Nenhum SRAM antigo do IDBFS é montado. A restauração mantém a API `refresh_save_files` do runtime fixado; interpretação dentro do jogo continua dependente de prova real. Não foi presumido suporte a carregamento antes do core.
+
+Escopo API: SNES, slot padrão `1` na UI. HTTP suporta slots `[a-z0-9_-]{1,32}`. SRAM e estados são separados. `If-Match: "0"` cria slot ausente; ETag retornado é obrigatório para atualizar. PUT exige Content-Type octet-stream, X-Core-Version emulatorjs-4.2.3 e X-Super-Flip 1. 409 não perde save anterior. GET verifica SHA-256 antes de servir bytes; headers expõem ETag e versão do core.
+
+`X-Core-Build` identifica o conjunto dos dois artefatos SNES fixados. Novos envelopes o incluem; envelopes antigos com coreId=snes9x e versão 4.2.3 são aceitos como o único build historicamente suportado, sem reescrita na leitura. Uma futura troca de core exige nova política de compatibilidade. Import/restauração preservam em memória a cópia anterior e desligam sincronização; tamanho igual é uma validação estrutural, não prova de formato semântico.
+
+Requisições têm timeout de 12 s incluindo leitura do corpo. Sincronização opt-in a cada 15 s compara bytes, copia snapshot, permite uma requisição por vez e não enfileira snapshots. Para após três falhas ou imediatamente em 409; nunca adota silenciosamente outro ETag. Há tentativa manual, exportação e restauração explícita. Sem fila durável e sem save em beforeunload. `progress` distingue envio, confirmação, alteração local e conflito. Encerramento sem evento ainda pode perder alterações.
+
+Entrada: UI possui A/confirmar e B/voltar; iframe possui gameplay e combo Select+Start. Em troca de contexto/reconexão, botões, eixos e teclas precisam voltar a neutro. Pausa libera todos os inputs do core; os índices 12–29 são recusados pela política do produto. Perfis SNES usam posição física e podem ser calibrados por ID do dispositivo. Um gamepad de cada vez; APIs bloqueadas não interrompem o teclado/controle remoto.

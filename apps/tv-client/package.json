@@ -1,0 +1,44 @@
+{
+  "name": "super-flip-cb-client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0 <25"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "runtime:build": "node scripts/build-runtime.mjs",
+    "runtime:test": "node --test ../../scripts/runtime/runtime.test.cjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src public/player/*.js tests *.ts",
+    "format": "prettier --write src public/player tests *.ts *.json index.html",
+    "format:check": "prettier --check src public/player tests *.ts *.json index.html",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "contracts": "openapi-typescript ../../docs/api/openapi.json -o src/services/schema.d.ts && prettier --write src/services/schema.d.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "5.3.0",
+    "@fontsource-variable/pixelify-sans": "5.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}
