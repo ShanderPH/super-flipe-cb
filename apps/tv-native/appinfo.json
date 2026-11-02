@@ -1,0 +1,14 @@
+{
+  "id": "com.superflipcb.native",
+  "version": "0.1.0",
+  "vendor": "Super Flip CB",
+  "type": "native",
+  "nativeLifeCycleInterfaceVersion": 2,
+  "main": "superflip-native",
+  "title": "Super Flip CB",
+  "icon": "icon.png",
+  "resolution": "1920x1080",
+  "cloudgame_active": true,
+  "useAllKeyboardKeys": true,
+  "useAllMouseButtons": true
+}

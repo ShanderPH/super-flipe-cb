@@ -1,0 +1,38 @@
+{
+  "SDL-Zlib.txt": {
+    "url": "https://raw.githubusercontent.com/webosbrew/SDL-webOS/release-2.30.12-webos.5/LICENSE.txt",
+    "sha256": "97f35b302b361680ec1e891e95d2d52097bb95abff361434916d99dc1305f127"
+  },
+  "curl.txt": {
+    "url": "https://raw.githubusercontent.com/curl/curl/curl-8_22_0/COPYING",
+    "sha256": "82f2f4427d6545ee5aaac4f0b80428da6cc8ba41c2cf5da3a03680ec327b9681"
+  },
+  "json-c.txt": {
+    "url": "https://raw.githubusercontent.com/json-c/json-c/json-c-0.18-20240915/COPYING",
+    "sha256": "74c1e6ca5eba76b54d0ad00d4815c8315c1b3bc45ff99de61d103dc92486284c"
+  },
+  "OpenSSL.txt": {
+    "url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.6.4/LICENSE.txt",
+    "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a"
+  },
+  "zlib.txt": {
+    "url": "https://raw.githubusercontent.com/madler/zlib/v1.3.2/LICENSE",
+    "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2"
+  },
+  "GCC-GPL-3.txt": {
+    "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-16.2.0/COPYING3",
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+  },
+  "GCC-LGPL-2.1.txt": {
+    "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-16.2.0/COPYING.LIB",
+    "sha256": "a9bdde5616ecdd1e980b44f360600ee8783b1f99b8cc83a2beb163a0a390e861"
+  },
+  "GCC-Runtime-Exception.txt": {
+    "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-16.2.0/COPYING.RUNTIME",
+    "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+  },
+  "libstdc++-notice.txt": {
+    "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-16.2.0/libstdc++-v3/doc/html/manual/license.html",
+    "sha256": "6ef2606fad7fce5ba388fef9d8d137178d0135f3d2c538b664229b58eae5ce06"
+  }
+}

@@ -60,3 +60,66 @@ test("real bridge persists SRAM and reports network failure without claiming suc
     ),
   ).toBe(true);
 });
+
+test("benchmark bridge never reads or writes real progress and exports honest metrics", async ({
+  page,
+  request,
+}) => {
+  const catalog = await (await request.get("/api/games")).json();
+  const gameId = catalog.items[0].id;
+  const saveRequests: string[] = [];
+  page.on("request", (req) => {
+    if (req.url().includes("/saves/")) saveRequests.push(req.method());
+  });
+  await page.route("**/emulatorjs/data/loader.js", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `
+      window.EJS_emulator = {
+        config:{}, gamepad:{on(){},terminate(){window.pollingStopped=true},updateGamepadState(){}},
+        setupKeys(){},on(){},paused:false,
+        gameManager:{functions:{simulateInput(){},getFrameNum(){return 0}}}
+      };
+      setTimeout(()=>{EJS_ready();EJS_onGameStart()},0);`,
+    }),
+  );
+  await page.goto(
+    `/player/?gameId=${gameId}&benchmark=1&diagnostics=1&region=ntsc`,
+  );
+  await page.waitForFunction("!!window.superFlipBenchmark");
+  const report = await page.evaluate("window.superFlipBenchmark.report()");
+  expect(report).toMatchObject({
+    options: { nominalFps: 60.0988 },
+    pureCoreFrameMs: { status: "unavailable" },
+    presentedGameFrames: { status: "unavailable" },
+    hardwareValidated: false,
+  });
+  expect(await page.evaluate("window.pollingStopped")).toBe(true);
+  const error = await page.evaluate(
+    (id) =>
+      new Promise<string>((resolve) => {
+        const listener = (event: MessageEvent) => {
+          if (
+            event.data.requestId === "forbidden-save" &&
+            event.data.type === "error"
+          ) {
+            window.removeEventListener("message", listener);
+            resolve(event.data.payload.message);
+          }
+        };
+        window.addEventListener("message", listener);
+        window.postMessage(
+          {
+            type: "save",
+            requestId: "forbidden-save",
+            gameId: id,
+            payload: {},
+          },
+          location.origin,
+        );
+      }),
+    gameId,
+  );
+  expect(error).toContain("alterações de progresso bloqueadas");
+  expect(saveRequests).toEqual([]);
+});

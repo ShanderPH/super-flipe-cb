@@ -1,6 +1,7 @@
 data/
 vendor/emulatorjs/
 vendor/emulatorjs-backup-*/
+vendor/experiments/
 .venv/
 __pycache__/
 .pytest_cache/

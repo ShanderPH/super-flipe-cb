@@ -1,8 +1,13 @@
 # Super Flip CB
 
+O app nativo experimental agora inclui interface C++ e PS1 pela LAN, mantendo
+RetroArch/Snes9x nativos. O legado web descrito abaixo continua preservado.
+Veja [execução e validação nativas](docs/development/native-product.md) e
+[arquitetura](docs/architecture/native-architecture.md).
+
 Biblioteca SNES doméstica para LG webOS: React/TypeScript na TV, EmulatorJS/WASM **na TV**, FastAPI e arquivos no PC. UI, API, ROM e core são servidos na mesma origem LAN. Não há emulação no servidor nem serviço de nuvem obrigatório.
 
-**Estado: implementação inicial v0.0.1, sem aceite de hardware.** Por orientação do usuário em 17/10/2026, implementação precede a PoC. A etapa de validação na LG está em [docs/hardware-tests.md](docs/hardware-tests.md). Áudio, gamepad, cache, retomada e desempenho na TV ainda não foram comprovados. Atari, Mega Drive e PS1 não estão habilitados.
+**Estado do legado web: implementação inicial v0.0.1, sem aceite de hardware.** Por orientação do usuário em 17/10/2026, implementação precede a PoC. A etapa de validação na LG está em [docs/hardware-tests.md](docs/hardware-tests.md). Áudio, gamepad, cache, retomada e desempenho do player web na TV ainda não foram comprovados. Atari, Mega Drive e PS1 não estão habilitados no player web; PS1 está integrado no app nativo descrito acima.
 
 ## Executar no Windows
 
@@ -60,7 +65,11 @@ A sincronização opcional da sessão verifica SRAM a cada 15 s, envia somente m
 
 Detalhamento, provas e pendências: [docs/audit-improvements.md](docs/audit-improvements.md). O launcher 0.0.2 usa `cloudgame_active=true`; instalar somente o frontend no PC não altera o manifesto do app já instalado na TV. `package.ps1` verifica o manifesto dentro do IPK e gera um JSON com hash. Para comparação de composição: `package.ps1 -Resolution 1280x720`; os pacotes usam o mesmo ID/versão e pastas separadas, instalando apenas um por vez. Não há instalação automática.
 
-Em Diagnóstico, calibre controles sem `mapping=standard`, selecione WebGL 1/2 e ative o registro antes da partida. O menu permite exportar a sessão: build/hash, renderer efetivo quando acessível, boot, frames do core, intervalos rAF e eventos de entrada. Sem taxa nominal confiável não calculamos percentual de velocidade; áudio e memória indisponíveis são `null`. As opções de medição duram a sessão do navegador; só o perfil de controle e o endpoint do launcher têm armazenamento persistente intencional.
+Em Diagnóstico, calibre controles sem `mapping=standard`, selecione WebGL 1/2 e ative o registro antes da partida. O menu exporta build/hash, renderer, boot, avanço do core, iteração RetroArch, rAF p50/p95/p99/jitter, submissão CPU de vídeo/agendamento de áudio, memória quando exposta e status da proteção de tela. Métricas sem fronteira confiável são `unavailable` com motivo. Percentual de velocidade exige região verificada pelo operador. Desligar áudio/upload de vídeo serve apenas à investigação; restaure ambos para jogar. As opções duram a sessão do navegador; perfil de controle e endpoint têm persistência intencional.
+
+Investigação na **55QNED70BSA/webOS26**: a lentidão foi reproduzida fisicamente; não há aceite de desempenho. Profiler desligado não instala hooks de medição. O input agora usa um snapshot por rAF; os mapeamentos confirmados foram preservados. A proteção de tela tem lifecycle de execução/pausa/ocultação e fallback webOS com status, cuja eficácia depende do firmware/contexto. O botão Menu deixa de permanecer visível durante o jogo e reaparece com foco/hover. [Causas e evidências](docs/research/performance-root-cause.md), [benchmarks isolados](docs/research/benchmark-results.md) e [plano verificável](docs/planning/performance-overhaul.md). A PoC PS1 está separada do catálogo SNES e requer mídia/BIOS legítimas; não há suporte PS1 pronto ou tarefas PS2 nesta rodada.
+
+[Continuação do overhaul](docs/research/performance-overhaul-execution.md): baseline 2005 reproduzível, variantes O3/LTO/heap32, timings separados, equivalência A/V de boot em cinco ROMs, remoção de cópia redundante do disco PS1 e descarte definitivo da proteção de tela. Resultados novos são desktop. **Nenhum acesso/teste adicional na TV sem autorização explícita para a sessão**. Sunshine/Moonlight: preparação local autorizada, instalação e pareamento pendentes.
 
 O runtime é produzido localmente pelo toolchain instalado, sem debug e sem consulta/fallback à CDN. O patch verifica SHA-256 antes/depois; o servidor verifica cores e bundle ao iniciar. Com servidor parado, execute `scripts/build/build.ps1` para atualizar uma instalação existente ou o instalador para obter a árvore completa. O instalador prepara tudo antes da troca de diretório e conserva `vendor/emulatorjs-backup-*` para rollback. Em caso de falha física entre renomes, recoloque o backup manualmente com o servidor parado. UI/runtime permitem cache com revalidação (assets com hash, cache imutável); ROMs, saves e API mantêm `no-store`.
 

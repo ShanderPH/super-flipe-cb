@@ -121,8 +121,15 @@ export function startInput(
     wasCalibrating = false;
   let calibrated: number[] | null = null;
   const poll = (time: number) => {
-    const pad = connectedGamepads()[0];
     const playing = isPlaying();
+    // Gameplay belongs to the iframe. Avoid a second gamepad read and DOM scan.
+    if (playing) {
+      lastPlaying = true;
+      armed = false;
+      frame = requestAnimationFrame(poll);
+      return;
+    }
+    const pad = connectedGamepads()[0];
     const device = pad ? `${pad.id}:${pad.index}` : "";
     const calibrating = !!document.querySelector(
       '[data-input-calibration="true"]',

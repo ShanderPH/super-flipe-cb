@@ -1,0 +1,50 @@
+name: Native PoC
+on:
+  push:
+    paths: ['apps/tv-native/**', 'scripts/native/**', 'tests/native/**', 'server/app/native.py', 'server/tests/test_native.py', '.github/workflows/native.yml']
+  pull_request:
+    paths: ['apps/tv-native/**', 'scripts/native/**', 'tests/native/**', 'server/app/native.py', 'server/tests/test_native.py', '.github/workflows/native.yml']
+  workflow_dispatch:
+    inputs:
+      cross_build:
+        description: Build and structurally verify the ARMv7 IPK (no device acceptance)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  desktop:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config libcurl4-openssl-dev libjson-c-dev libssl-dev libsdl2-dev libfreetype-dev libegl1-mesa-dev libgles2-mesa-dev
+      - run: python3 scripts/native/ci-smoke.py --work "$RUNNER_TEMP/native-smoke"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.9'
+      - run: uv run --project server python tests/native/test_api_integration.py --binary "$RUNNER_TEMP/native-smoke/host/superflip-native" --report "$RUNNER_TEMP/native-smoke/api-integration.json"
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/native-server-venv
+      - run: uv run --project server python tests/native/test_product.py --binary "$RUNNER_TEMP/native-smoke/host/superflip-native"
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/native-server-venv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-desktop-evidence
+          path: |
+            ${{ runner.temp }}/native-smoke/*.log
+            ${{ runner.temp }}/native-smoke/core-smoke.json
+            ${{ runner.temp }}/native-smoke/api-integration.json
+  arm:
+    if: github.event_name == 'workflow_dispatch' && inputs.cross_build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config python3 patchelf
+      - run: python3 scripts/native/build.py --work "$RUNNER_TEMP/native-arm" --output artifacts/native/Release
+      - run: python3 scripts/native/package.py --build artifacts/native/Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-arm-ipk-not-device-validated
+          path: artifacts/native/Release

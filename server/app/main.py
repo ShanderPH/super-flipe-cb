@@ -14,6 +14,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .catalog import Catalog, Game, confined
 from .config import Settings
+from .native import native_router
 from .runtime import CORE_BUILD, CORE_HASHES
 from .saves import SaveStore
 from .schemas import Capabilities, GamePage, SaveMetadata
@@ -35,7 +36,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     try:
         manifest = json.loads((cfg.runtime / "superflip-build.json").read_text())
         runtime_valid = (
-            manifest["patch"] == 1
+            manifest["patch"] == 2
             and all(
                 hashlib.sha256((cfg.runtime / "cores" / name).read_bytes()).hexdigest() == digest
                 for name, digest in CORE_HASHES.items()
@@ -50,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         pass
     app = FastAPI(title="Super Flip CB", version="0.0.1", docs_url=None, redoc_url=None)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=cfg.hosts)
+    app.include_router(native_router(cfg.data, catalog))
 
     @app.middleware("http")
     async def boundary(request: Request, call_next):
@@ -121,7 +123,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "engine": "EmulatorJS",
             "engineVersion": "4.2.3",
             "sourceCommit": "e150dc0491ae747028919fb82d6598954976ede6",
-            "inputPatch": 1,
+            "inputPatch": 2,
             "core": "snes9x",
             "coreBuild": CORE_BUILD,
             "coreHashes": CORE_HASHES,

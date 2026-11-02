@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Game } from "../../services/api";
 import { command, validMessage } from "./adapter";
+import {
+  screenProtection,
+  deviceInfo,
+} from "../../../public/player/platform.js";
 
 export function Player({
   game,
@@ -14,6 +18,19 @@ export function Player({
   setMenu: (value: boolean) => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const protection = useRef<ReturnType<typeof screenProtection> | null>(null);
+  const platformInfo = useRef<object>({ status: "pending" });
+  useEffect(() => {
+    const guard = screenProtection();
+    protection.current = guard;
+    void deviceInfo().then((info) => {
+      platformInfo.current = info;
+    });
+    return () => {
+      guard.stop();
+      protection.current = null;
+    };
+  }, []);
   const [status, setStatus] = useState(
     "Carregando engine e ROM da rede local…",
   );
@@ -39,6 +56,11 @@ export function Player({
       return new URLSearchParams({
         renderer: options.renderer === "webgl2" ? "webgl2" : "webgl1",
         diagnostics: options.diagnostics === true ? "1" : "0",
+        audio: options.audio === false ? "off" : "on",
+        video: options.video === false ? "off" : "on",
+        region: ["ntsc", "pal"].includes(options.region)
+          ? options.region
+          : "auto",
       }).toString();
     } catch {
       return "renderer=webgl1";
@@ -46,6 +68,9 @@ export function Player({
   });
   const importFile = useRef<HTMLInputElement>(null);
   const requestTimer = useRef<number>(0);
+  useEffect(() => {
+    protection.current?.setPlaying(started && !menu && !paused && !fatal);
+  }, [started, menu, paused, fatal]);
   useEffect(() => {
     let startTimer = 0;
     const handler = (event: MessageEvent) => {
@@ -200,7 +225,12 @@ export function Player({
         allow="autoplay; gamepad; fullscreen"
       />
       {!menu && (
-        <button className="menu-trigger" onClick={() => setMenu(true)}>
+        <button
+          className={
+            started ? "menu-trigger gameplay-menu-access" : "menu-trigger"
+          }
+          onClick={() => setMenu(true)}
+        >
           Menu / Voltar
         </button>
       )}
@@ -308,7 +338,14 @@ export function Player({
               </button>
               <button
                 disabled={!started || pending}
-                onClick={() => run("diagnostics")}
+                onClick={() =>
+                  run("diagnostics", {
+                    platform: {
+                      device: platformInfo.current,
+                      screenProtection: protection.current?.report(),
+                    },
+                  })
+                }
               >
                 Exportar diagnóstico da sessão
               </button>

@@ -1,0 +1,4 @@
+{
+  "server": "http://192.168.1.20:8797",
+  "gameId": "snes-REPLACE_WITH_THE_64_LOWERCASE_HEX_DIGITS_FROM_THE_CATALOG"
+}

@@ -1,5 +1,17 @@
 # Implementação da auditoria — 17/10/2026
 
+## Atualização: investigação física posterior
+
+Esta seção atualiza o estado; as seções seguintes preservam o histórico da auditoria anterior. Agora há remoto Git (`ShanderPH/super-flipe-cb`) e commit base `a69e2f70bc69aaeb98549b9611e9c6a0abaa2e38`. Trabalho atual em `codex/performance-investigation`. O usuário confirmou os controles e identificou lentidão contínua/protetor na 55QNED70BSA, webOS26 / 11.2.0-2909. A TV foi acessada pelo Developer Mode/inspector para ensaios isolados, sem reinstalar IPK ou tocar em saves reais.
+
+Entregas novas: profiler opt-in com fronteiras explícitas e `unavailable`; polling de gameplay consolidado em um rAF; UI cede input; proteção de tela com lifecycle, Wake Lock e fallback Luna diagnosticável; Menu oculto no gameplay até hover/foco; matriz A/V/profiler, comparação independente e PoC PS1 fora do catálogo de produção. Patch 2 mantém bytes dos cores e identidade de SRAM.
+
+**O desempenho ainda não satisfaz o aceite:** confirmação aquecida marcou 34,454/37,367 core frames/s. Amostragem apontou maior custo no WASM, sem separar componentes internos. Não há ganho antes/depois demonstrado. A PoC PS1 executou Castlevania até a tela de título no desktop com BIOS/disco reconhecidos, 59,897 core/s e roundtrip idêntico do card volátil de 128 KiB; não é aceite físico ou de saves dentro do jogo. O ensaio de inatividade foi interrompido manualmente pelo usuário e não prova sucesso/falha do protetor. PS2 foi retirado do plano atual por instrução do usuário; a linha P3 histórica abaixo está superada.
+
+Relatórios atuais: [causas](research/performance-root-cause.md), [benchmarks e comandos](research/benchmark-results.md), [TV](research/webos-hardware-capabilities.md), [cores/licenças](research/emulation-framework-comparison.md), [input](research/gamepad-architecture.md), [híbrido](research/hybrid-emulation-architecture.md) e [plano](planning/performance-overhaul.md). Resultados de regressão estão em [validation.md](validation.md); aceites longos permanecem distintos dos ensaios curtos.
+
+## Registro da auditoria anterior
+
 Relatório de origem: `analise-super-flip-cb.md`, diretório externo `analysis-output/super-flip-cb-2026-10-17`. A arquitetura continua React → iframe → EmulatorJS/RetroArch/Snes9x na TV e FastAPI/SaveStore no PC. Não foram baixados jogos/BIOS, alterados saves reais, trocados cores, publicados serviços ou instalados pacotes na TV.
 
 ## Entregas e limites
@@ -16,7 +28,7 @@ Relatório de origem: `analise-super-flip-cb.md`, diretório externo `analysis-o
 | P1.4 | Sincronização opt-in a cada 15 s, somente bytes alterados, snapshot copiado, uma requisição, ETag, limite de três falhas e bloqueio em conflito | Ativar após aceite SRAM real; desligamento ainda pode perder bytes não confirmados |
 | P2.1 | Diagnóstico informa contexto seguro, isolamento e SharedArrayBuffer; fallback atual sem threads preservado | Só experimentar offload/threads ou nativo se o perfil identificar gargalo; exige build apropriado |
 | P2.2 | Mantido gate PS1: estabilizar SNES, BIOS legítima, RAM/mídia, cinco títulos e multidisco/card | Não há core PS1 instalado ou suporte declarado |
-| P3 | Mantida prova PS2 independente conforme relatório | ABI/renderer/CPU/memória nativos precisam de teste antes de integração |
+| P3 histórico, superado | PS2 removido do escopo atual | Não executar ou planejar nesta rodada |
 
 ## Escolhas técnicas
 

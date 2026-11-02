@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width" />
+  <title>Super Flip · PS1 experimental</title
+  ><link rel="stylesheet" href="/player/player.css" />
+  <div id="game"></div>
+  <p id="status" role="status">
+    PS1 experimental. BIOS e disco locais. Cartão de memória somente nesta
+    sessão.
+  </p>
+  <section
+    id="menu"
+    hidden
+    style="
+      position: fixed;
+      inset: 15%;
+      padding: 2rem;
+      overflow: auto;
+      background: #101321;
+      z-index: 100;
+    "
+  >
+    <button id="resume">Continuar</button
+    ><button id="export">Exportar cartão de memória</button
+    ><button id="report">Exportar diagnóstico PS1</button
+    ><label
+      >Importar cópia do cartão
+      <input id="import" type="file" accept=".srm,.sav"
+    /></label>
+  </section>
+  <script type="module" src="/lab/assets/ps1.js"></script>
+</html>

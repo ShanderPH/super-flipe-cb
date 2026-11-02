@@ -13,6 +13,9 @@ export function Diagnostics() {
   const [calibration, setCalibration] = useState("");
   const [renderer, setRenderer] = useState("webgl1");
   const [recordSession, setRecordSession] = useState(false);
+  const [audioPath, setAudioPath] = useState(true);
+  const [videoPath, setVideoPath] = useState(true);
+  const [region, setRegion] = useState("auto");
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -20,17 +23,28 @@ export function Diagnostics() {
       );
       setRenderer(saved.renderer === "webgl2" ? "webgl2" : "webgl1");
       setRecordSession(saved.diagnostics === true);
+      setAudioPath(saved.audio !== false);
+      setVideoPath(saved.video !== false);
+      setRegion(["ntsc", "pal"].includes(saved.region) ? saved.region : "auto");
     } catch {
       /* Optional session settings. */
     }
   }, []);
-  const configureSession = (nextRenderer: string, diagnostics: boolean) => {
+  const configureSession = (
+    nextRenderer: string,
+    diagnostics: boolean,
+    changes: { audio?: boolean; video?: boolean; region?: string } = {},
+  ) => {
     setRenderer(nextRenderer);
     setRecordSession(diagnostics);
+    const next = { audio: audioPath, video: videoPath, region, ...changes };
+    setAudioPath(next.audio);
+    setVideoPath(next.video);
+    setRegion(next.region);
     try {
       sessionStorage.setItem(
         "superflip-player-options",
-        JSON.stringify({ renderer: nextRenderer, diagnostics }),
+        JSON.stringify({ renderer: nextRenderer, diagnostics, ...next }),
       );
     } catch {
       setCalibration(
@@ -100,7 +114,7 @@ export function Diagnostics() {
         setPads(
           connectedGamepads().map(
             (p) =>
-              `${p.id} · índice ${p.index} · mapping ${p.mapping || "não padrão"}`,
+              `${p.id} · índice ${p.index} · mapping ${p.mapping || "não padrão"} · botões ${p.buttons.flatMap((b, i) => (b.pressed || b.value > 0.1 ? [`${i}:${b.value.toFixed(2)}`] : [])).join(", ") || "soltos"} · eixos ${p.axes.map((a) => a.toFixed(2)).join(", ")}`,
           ),
         ),
       500,
@@ -291,6 +305,48 @@ export function Diagnostics() {
             <option value="webgl2">WebGL 2 · experimento</option>
           </select>
         </label>
+        <label>
+          Região verificada da ROM{" "}
+          <select
+            value={region}
+            onChange={(e) =>
+              configureSession(renderer, recordSession, {
+                region: e.target.value,
+              })
+            }
+          >
+            <option value="auto">Desconhecida · velocidade indisponível</option>
+            <option value="ntsc">NTSC · 60,0988 Hz</option>
+            <option value="pal">PAL · 50,007 Hz</option>
+          </select>
+        </label>
+        <button
+          aria-pressed={audioPath}
+          onClick={() =>
+            configureSession(renderer, recordSession, { audio: !audioPath })
+          }
+        >
+          {audioPath
+            ? "Desligar saída de áudio · teste"
+            : "Religar saída de áudio"}
+        </button>
+        <button
+          aria-pressed={videoPath}
+          onClick={() =>
+            configureSession(renderer, recordSession, { video: !videoPath })
+          }
+        >
+          {videoPath
+            ? "Desligar envio de vídeo · teste"
+            : "Religar envio de vídeo"}
+        </button>
+        {(!audioPath || !videoPath) && (
+          <p role="status">
+            Modo de comparação: a próxima partida terá saída de áudio ou vídeo
+            desligada. O core ainda emula CPU, PPU e APU. Religue ambas antes de
+            jogar.
+          </p>
+        )}
         <button
           aria-pressed={recordSession}
           onClick={() => configureSession(renderer, !recordSession)}
@@ -302,8 +358,8 @@ export function Diagnostics() {
         <p>
           Exporte o diagnóstico pelo menu do jogo. O registro inclui eventos,
           identificação do controle, core e renderer; não inclui ROMs ou SRAM.
-          rAF não é FPS do jogo. Áudio, velocidade nominal e memória sem medição
-          ficam marcados como indisponíveis.
+          rAF não é FPS apresentado. Tempos do loop incluem o frontend; tempos
+          GL medem envio pela CPU. Métricas não expostas ficam indisponíveis.
         </p>
       </fieldset>
       <p className="muted">

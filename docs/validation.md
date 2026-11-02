@@ -1,4 +1,33 @@
-# Rodada consolidada após auditoria — 17/10/2026
+# Validação da investigação de desempenho — 17/10/2026
+
+**Atualização operacional autorizada posteriormente pelo usuário:** IPK `com.superflipcb.app_0.0.2_all.ipk` de 1920×1080 atualizado na `superflip-tv`, sem desinstalação. CLI confirmou `Success`; metadados instalados confirmaram versão 0.0.2, resolução e `cloudgame_active=true`. SHA-256 do pacote: `0e065d0203c80d93717e5b115ff39cd6968ef8bed1a432dd66f3593032ceab03`. Servidor iniciado em `http://192.168.15.4:8797/`, vinculado apenas ao IP privado; `/api/health`, UI e player responderam pelo PC, runtime de produção verificado e saves idênticos ao backup anterior à atualização. [Registro local completo](../artifacts/updates/ipk-20261018-023953Z/update-result.json). Nenhum launcher/jogo foi aberto para testes; sem inspector, benchmark físico, mudança de firewall ou promoção do core experimental. Esta autorização específica não autoriza futuros testes na TV.
+
+Continuação local do overhaul: **18 Vitest, 7 runtime, 12 E2E, 20 pytest passaram; 1 pytest ignorado por permissão de symlink**. Quatro testes Node do laboratório passaram (autorização antes de conexão, FIFO/resampling/limites). ESLint, TypeScript, build, Prettier, Ruff e contrato OpenAPI passaram. Builds O3/LTO/heap32 e equivalência de 600 frames em cinco ROMs, telemetria A/V desktop e memória PS1 estão na [execução detalhada](research/performance-overhaul-execution.md). Não há aceite físico novo. Os resultados da tabela abaixo são da investigação anterior.
+
+Branch `codex/performance-investigation`, base `a69e2f70bc69aaeb98549b9611e9c6a0abaa2e38`, remoto `ShanderPH/super-flipe-cb`. As seções posteriores são histórico e descrevem um estado Git anterior.
+
+| Verificação desta rodada | Resultado |
+|---|---|
+| ESLint, TypeScript/build Vite, Prettier | Passaram |
+| Vitest | **17 passaram**: input/SRAM e novos limites de profiler/lifecycle Wake Lock/Luna |
+| Testes no runtime EmulatorJS real | **7 passaram**: índices/reconexão, hotkeys, SRAM, audio-off e hooks pre/postMainLoop |
+| Playwright desktop | **12 passaram**, zero retries: regressões existentes e novo isolamento de saves/relatório do benchmark |
+| Pytest | **19 passaram, 1 ignorado** por privilégio de symlink no Windows; junction executado. Inclui lab read-only, travessia de manifesto, BIOS/mídia PS1 e nome correto da BIOS |
+| Ruff lint/format do backend e scripts do lab | Passaram |
+| Patch 2 em fontes pristine do SHA pinado | Hashes originais/finais, reaplicação idempotente e recusa de tamper; [prova](research/data/runtime-patch-proof-2026-10-17.json) |
+| Desktop com ROM real local | 30 ensaios exploratórios, duas engines, A/V/profiler separados, nenhum page error; SwiftShader, **não aceite de hardware** |
+| LG física | Inventário, matriz curta, baseline aquecida, GL2 e perfil CPU via inspector; [dados e limites](research/benchmark-results.md) |
+| PS1 real desktop | Castlevania, BIOS `scph5501.bin` reconhecida, tela de título conferida; 59,897 core/s em 30 s após 60 s warmup; card volátil de 128 KiB idêntico após importação. **Não é aceite na LG ou de save dentro do jogo** |
+
+Os testes de integração automatizados usam bytes sintéticos/stubs; o benchmark em separado usa cópia temporária da ROM local selecionada e core real. Nenhuma BIOS/jogo foi obtido pela rede. Core SNES, identidade dos saves e mapeamentos aprovados foram preservados. Sem instalação de IPK, merge, deploy, CI remota ou aceite PS1/streaming. A velocidade física medida continua insuficiente; não declarar release pronta.
+
+**Pendências físicas:** atribuição interna de CPU/PPU/APU/Asyncify, alternativa independente em contexto seguro, áudio perceptivo/underruns, input→fóton, SRAM reconhecida por jogo real e aceite sustentado de 30/60 min. A proteção de tela e sua evidência de inatividade são relatadas separadamente. Métricas não observáveis permanecem `unavailable`.
+
+O usuário confirmou Home/standby/outro aplicativo durante o ensaio prolongado de inatividade: ensaio invalidado para avaliar o protetor. O launcher original foi restaurado após a navegação de laboratório; não houve instalação de IPK.
+
+---
+
+# Histórico: rodada consolidada após auditoria — 17/10/2026
 
 Resultado local: **42 testes passaram; 1 ignorado por permissão de symlink no Windows**.
 

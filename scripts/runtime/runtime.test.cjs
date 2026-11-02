@@ -73,3 +73,23 @@ test('server-owned SRAM uses volatile FS and does not load stale IndexedDB', asy
   await manager.mountFileSystems();
   assert.deepEqual(directories, ['/data', '/data/saves']);
 });
+
+test('audio ablation disables the frontend output without changing normal defaults', () => {
+  const { engine, manager } = runtime();
+  engine.config = { superFlip: { audio: false } };
+  assert.match(manager.getRetroArchCfg(), /audio_enable = false/);
+  engine.config.superFlip.audio = true;
+  assert.doesNotMatch(manager.getRetroArchCfg(), /audio_enable = false/);
+});
+
+test('Emscripten receives opt-in pre/postMainLoop hooks before instantiation', () => {
+  const { engine, context } = runtime();
+  const preMainLoop = () => {}, postMainLoop = () => {};
+  engine.config = { superFlip: { runtimeOptions: { preMainLoop, postMainLoop } } };
+  engine.elements = { parent: {} };
+  let options;
+  context.window.EJS_Runtime = (value) => { options = value; return { then() { return { catch() {} }; } }; };
+  engine.initModule(new Uint8Array(), null);
+  assert.equal(options.preMainLoop, preMainLoop);
+  assert.equal(options.postMainLoop, postMainLoop);
+});

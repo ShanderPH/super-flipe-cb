@@ -605,3 +605,6 @@ footer {
     margin-top: 24px;
   }
 }
+.gameplay-menu-access:not(:focus-visible):not(:hover) {
+  opacity: 0;
+}

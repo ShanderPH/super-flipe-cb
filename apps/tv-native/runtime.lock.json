@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "target": "arm-webos-linux-gnueabi",
+  "retroarch": {
+    "version": "1.22.2",
+    "commit": "4c4953bf331348263cd68df0b654cf00583b437a",
+    "url": "https://github.com/webosbrew/RetroArch/releases/download/v1.22.2/retroarch-sourceonly-1.22.2.tar.xz",
+    "sha256": "0b3eeb5c6d13f5331c2bb78803a21d50e0749a8341d6ce9b1ebc71e0e7ee279e",
+    "directory": "retroarch-sourceonly-1.22.2"
+  },
+  "toolchain": {
+    "version": "2026.08-webos",
+    "url": "https://github.com/openlgtv/buildroot-nc4/releases/download/2026.08-webos/arm-webos-linux-gnueabi_sdk-buildroot-x86_64.tar.gz",
+    "sha256": "2230a6351e5cce6fcb9d4fdcb4697335f223995401ef969c81744aaeb14c5344",
+    "directory": "arm-webos-linux-gnueabi_sdk-buildroot"
+  },
+  "sdl": {
+    "version": "2.30.12-webos.5-abi",
+    "url": "https://github.com/webosbrew/SDL-webOS/releases/download/release-2.30.12-webos.5/SDL2-2.30.12-webos-abi.tar.gz",
+    "sha256": "750ea26b41425ed54a58aba40d70970d4c0bae239142781f03dfcd153da475d1"
+  },
+  "packager": {
+    "version": "0.7.0",
+    "url": "https://github.com/webosbrew/ares-cli-rs/releases/download/v0.7.0/ares-package_0.7.0-1_amd64.deb",
+    "sha256": "ff23939b5e4165c4ac7eb37b07662e4ff56af46075a7b239527883266cde8e11"
+  },
+  "ps1": {
+    "id": "pcsx_rearmed",
+    "commit": "c8816799b50388e61cfe237fe2cdbb7d8175f20a",
+    "url": "https://codeload.github.com/libretro/pcsx_rearmed/tar.gz/c8816799b50388e61cfe237fe2cdbb7d8175f20a",
+    "sha256": "edeb21fdeef8815521cb9d4488d2cd35746607c968ca9b26cce4e42c09f2dc99",
+    "directory": "pcsx_rearmed-c8816799b50388e61cfe237fe2cdbb7d8175f20a"
+  },
+  "core": {
+    "id": "snes9x",
+    "commit": "fae2fea08f74180759ef540ee94259213f503480",
+    "url": "https://codeload.github.com/libretro/snes9x/tar.gz/fae2fea08f74180759ef540ee94259213f503480",
+    "sha256": "0d4b0c4181d66668ec0040eb17f90a559f7b7fa6cbd9198593c3bdbe79acd029",
+    "directory": "snes9x-fae2fea08f74180759ef540ee94259213f503480"
+  }
+}

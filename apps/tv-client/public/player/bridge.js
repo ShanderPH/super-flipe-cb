@@ -8,13 +8,24 @@ import {
 } from "./controls.js";
 import { SaveSync, validateSram } from "./sram.js";
 import { sessionDiagnostics } from "./diagnostics.js";
+import { runtimeProbe } from "./runtime-probe.js";
 const params = new URLSearchParams(location.search);
+const benchmark = params.get("benchmark") === "1";
 const gameId = params.get("gameId"),
   status = document.getElementById("status");
 const options = {
   webgl2: params.get("renderer") === "webgl2",
   diagnostics: params.get("diagnostics") === "1",
+  audio: params.get("audio") !== "off",
+  video: params.get("video") !== "off",
+  nominalFps:
+    params.get("region") === "ntsc"
+      ? 60.0988
+      : params.get("region") === "pal"
+        ? 50.007
+        : null,
 };
+const probe = runtimeProbe(options);
 const gate = inputGate();
 const bootStarted = performance.now();
 let loaderReadyAt = null,
@@ -30,6 +41,8 @@ let diagnostics = null,
   activePad = "",
   profile = SNES_BUTTONS,
   seenPad = "";
+let polledPads = [],
+  lastInputSample = 0;
 let autosync = false; // Enable after a real save/continue check on this TV/core.
 const endpoint = "/api/games/" + encodeURIComponent(gameId) + "/saves/1";
 const engine = () => window.EJS_emulator;
@@ -135,7 +148,9 @@ async function boot() {
     throw new Error("Não foi possível identificar o runtime.");
   const runtime = await runtimeResponse.json();
   coreBuild = runtime.coreBuild;
-  const saved = await request(endpoint);
+  const saved = benchmark
+    ? new Response(null, { status: 404 })
+    : await request(endpoint);
   let initialSave = null,
     etag = '"0"';
   if (saved.ok) {
@@ -200,9 +215,13 @@ async function boot() {
     },
     EJS_ready: () => {
       engine().config.superFlip = {
+        runtimeOptions: probe.moduleOptions,
+        audio: options.audio,
         allowInput: () => {
           if (!ready || !gate.armed || engine().paused) return false;
-          const pad = getPads().find((p) => p.id + ":" + p.index === activePad);
+          const pad = polledPads.find(
+            (p) => p.id + ":" + p.index === activePad,
+          );
           if (
             pad?.buttons[profile[2]]?.pressed &&
             pad?.buttons[profile[3]]?.pressed
@@ -213,9 +232,13 @@ async function boot() {
           return true;
         },
       };
+      // One snapshot per display tick, shared with upstream's event mapper.
+      engine().gamepad.terminate?.();
+      engine().gamepad.getGamepads = () => polledPads;
+      probe.attach();
       for (const type of ["buttondown", "buttonup", "axischanged"])
         engine().gamepad.on(type, (event) => {
-          const pad = getPads().find((p) => p.index === event.gamepadIndex);
+          const pad = polledPads.find((p) => p.index === event.gamepadIndex);
           if (!pad || pad.id + ":" + pad.index !== activePad) return;
           engine().gamepadEvent(event);
         });
@@ -260,15 +283,24 @@ async function boot() {
         engine().controls = controls(profile);
         engine().setupKeys();
         ready = true;
-        diagnostics = sessionDiagnostics(engine(), runtime, {
-          ...options,
-          boot: {
-            untilReadyMs:
-              loaderReadyAt === null ? null : loaderReadyAt - bootStarted,
-            gestureToStartMs:
-              gestureAt === null ? null : performance.now() - gestureAt,
+        diagnostics = sessionDiagnostics(
+          engine(),
+          runtime,
+          {
+            ...options,
+            boot: {
+              untilReadyMs:
+                loaderReadyAt === null ? null : loaderReadyAt - bootStarted,
+              gestureToStartMs:
+                gestureAt === null ? null : performance.now() - gestureAt,
+            },
           },
-        });
+          probe,
+        );
+        if (benchmark)
+          window.superFlipBenchmark = Object.freeze({
+            report: () => diagnostics.report(),
+          });
         send("started");
       } catch (error) {
         engine().pause();
@@ -314,6 +346,8 @@ window.addEventListener("message", async (event) => {
   }
   let acquired = false;
   try {
+    if (benchmark && ["save", "restore", "import", "autosync"].includes(type))
+      throw new Error("Benchmark isolado: alterações de progresso bloqueadas.");
     if (type === "pause" || type === "resume") status.textContent = "";
     if (type === "pause") {
       pause();
@@ -332,7 +366,11 @@ window.addEventListener("message", async (event) => {
     }
     if (type === "diagnostics") {
       download(
-        JSON.stringify(diagnostics.report(), null, 2),
+        JSON.stringify(
+          { ...diagnostics.report(), platform: d.payload.platform ?? null },
+          null,
+          2,
+        ),
         "super-flip-sessao.json",
         "application/json",
       );
@@ -478,8 +516,8 @@ window.addEventListener("error", () =>
   fail("A engine encontrou uma falha. Abra o menu para voltar.", "event", true),
 );
 let startHeld = true;
-function poll() {
-  const pads = getPads(),
+function poll(now) {
+  const pads = (polledPads = getPads()),
     pad = pads[0];
   const device = pad ? pad.id + ":" + pad.index : "";
   if (device !== seenPad) {
@@ -506,7 +544,8 @@ function poll() {
           "Controle sem mapeamento padrão. Calibre em Diagnóstico ou use o teclado/controle remoto.",
       });
   }
-  const snapshot = options.diagnostics
+  const recordInput = options.diagnostics && now - lastInputSample >= 250;
+  const snapshot = recordInput
     ? JSON.stringify(
         pads.map((p) => ({
           index: p.index,
@@ -517,7 +556,7 @@ function poll() {
         })),
       )
     : "";
-  if (snapshot !== lastPadState) {
+  if (recordInput && snapshot !== lastPadState) {
     diagnostics?.input({
       type: "gamepad",
       pads: JSON.parse(snapshot),
@@ -526,6 +565,7 @@ function poll() {
     });
     lastPadState = snapshot;
   }
+  if (recordInput) lastInputSample = now;
   if (
     ready &&
     activePad &&
@@ -536,6 +576,7 @@ function poll() {
   )
     openMenu();
   gate.update(pads);
+  engine()?.gamepad?.updateGamepadState?.();
   if (!ready) {
     const pressed = !!(
       activePad &&
@@ -561,3 +602,7 @@ setInterval(() => {
 }, 15000);
 boot().catch((error) => fail(error.message, "event", true));
 requestAnimationFrame(poll);
+window.addEventListener("pagehide", () => {
+  diagnostics?.stop();
+  probe.stop();
+});
